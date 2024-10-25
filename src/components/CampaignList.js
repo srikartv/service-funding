@@ -1,45 +1,62 @@
-import { SimpleGrid, Box, Text, Heading, Image, Button, Home } from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import DonationForm from './DonationForm';
-import React from 'react';
-
-const campaigns = [
-  {
-    title: "Covid Relief Fund",
-    amountRaised: "3.12 ETH",
-    target: "11999 ETH",
-    imageUrl: "E:/minor/service-funding/src/images/covid.jpeg",
-  },
-  {
-    title: "Oxygen Crisis in India",
-    amountRaised: "1.1 ETH",
-    target: "20 ETH",
-    imageUrl: "images/oxygen.jpeg",
-  },
-  // Add more campaigns here
-];
+import React, { useContext } from 'react';
+import { Box, SimpleGrid, Text, Heading, Image, Button } from '@chakra-ui/react';
+import { useNavigate } from 'react-router-dom';
+import { CampaignContext } from '../context/CampaignContext';
+import { useWallet } from '../context/WalletContext'; // Import WalletContext to check login status
 
 function CampaignList() {
-  const navigate = useNavigate();
+  const { campaigns } = useContext(CampaignContext); // Fetch campaigns from CampaignContext
+  const { isConnected } = useWallet(); // Check if the user is logged in (wallet is connected)
+  const navigate = useNavigate(); // For navigation to DonationForm
 
-  const handleDonateClick = (campaign) => {
-    navigate('/donate', { state: { campaign } }); // Pass campaign details
+  // Display dynamic campaigns if the wallet is connected
+  const displayedCampaigns = isConnected ? campaigns : [];
+
+  const handleDonate = (campaign) => {
+    navigate('/donation', { state: { campaign } });
   };
+
   return (
-    <SimpleGrid columns={[1, 2, 3]} spacing={6}>
-      {campaigns.map((campaign, idx) => (
-        <Box key={idx} borderWidth="1px" borderRadius="lg" overflow="hidden" bg="white">
-          <Image src={campaign.imageUrl} alt={campaign.title} />
-          <Box p={4}>
-            <Heading as="h4" size="md" mb={2}>{campaign.title}</Heading>
-            <Text fontSize="sm">Raised: {campaign.amountRaised}</Text>
-            <Text fontSize="sm">Target: {campaign.target}</Text>
-            <Button mt={3} size="sm" colorScheme="green" onClick={() => handleDonateClick(campaign)}>
+    <SimpleGrid columns={[1, 2, 3]} spacing={10}>
+      {displayedCampaigns.length > 0 ? (
+        displayedCampaigns.map((campaign) => (
+          <Box
+            key={campaign.id}
+            borderWidth="1px"
+            borderRadius="lg"
+            p={4}
+            bg="white"
+            boxShadow="lg"
+          >
+            {/* Campaign Image */}
+            <Image
+              src={campaign.imageUrl}
+              alt={campaign.campaignName}
+              borderRadius="md"
+              mb={4}
+              objectFit="cover"
+              height="200px"
+              width="100%"
+            />
+            {/* Campaign Heading */}
+            <Heading as="h3" size="md" mb={4} color="#845ec2">
+              {campaign.campaignName}
+            </Heading>
+            {/* Campaign Description */}
+            <Text color="gray.700">
+              {campaign.description}
+            </Text>
+            {/* Donate Button */}
+            <Button mt={4} colorScheme="purple" onClick={() => handleDonate(campaign)}>
               Donate
             </Button>
           </Box>
-        </Box>
-      ))}
+        ))
+      ) : (
+        <Text fontSize="lg" color="gray.600">
+          No campaigns available. Be the first to create one!
+        </Text>
+      )}
     </SimpleGrid>
   );
 }

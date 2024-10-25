@@ -1,22 +1,43 @@
-import { Box, Button, Input, FormLabel, Textarea, Heading, Flex } from '@chakra-ui/react';
-import { useState } from 'react';
+import { Box, Button, Input, FormLabel, Textarea, Heading, Flex, Text } from '@chakra-ui/react';
+import { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useWallet } from '../context/WalletContext';
+import { CampaignContext } from '../context/CampaignContext';
 
 function CreateCampaign() {
   const [minimumContribution, setMinimumContribution] = useState("");
   const [campaignName, setCampaignName] = useState("");
   const [description, setDescription] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState(null); // Change to handle image file
   const [targetAmount, setTargetAmount] = useState("");
 
+  const { isConnected, walletAddress } = useWallet(); // Fetch wallet address
+  const { addCampaign } = useContext(CampaignContext);
+  const navigate = useNavigate();
+
   const handleSubmit = () => {
-    // Here you would typically handle form submission to the backend or smart contract
-    console.log({
+    if (!isConnected) {
+      alert("Please connect your wallet before creating a campaign.");
+      return;
+    }
+
+    if (!imageFile) {
+      alert("Please upload an image for your campaign.");
+      return;
+    }
+
+    const newCampaign = {
+      id: Date.now(),
       minimumContribution,
       campaignName,
       description,
-      imageUrl,
+      imageUrl: URL.createObjectURL(imageFile), // Use URL.createObjectURL to create a preview URL
       targetAmount,
-    });
+      walletAddress, // Add the wallet address of the user creating the campaign
+    };
+
+    addCampaign(newCampaign);
+    navigate('/');
   };
 
   return (
@@ -25,15 +46,20 @@ function CreateCampaign() {
         Create a New Campaign
       </Heading>
 
-      {/* Change color to black here */}
+      {!isConnected && (
+        <Text color="red.500" mb={4}>
+          You must connect your wallet before creating a campaign.
+        </Text>
+      )}
+
       <FormLabel color="black">Minimum Contribution Amount (ETH)</FormLabel>
       <Input
         value={minimumContribution}
         onChange={(e) => setMinimumContribution(e.target.value)}
         placeholder="Minimum Contribution Amount"
         mb={4}
-        // Added green color using borderColor
-        borderColor="green.500" // Adjust the shade as needed
+        borderColor="green.500"
+        color="black"
       />
 
       <FormLabel color="black">Campaign Name</FormLabel>
@@ -42,8 +68,8 @@ function CreateCampaign() {
         onChange={(e) => setCampaignName(e.target.value)}
         placeholder="Campaign Name"
         mb={4}
-        // Added green color using borderColor
-        borderColor="green.500" // Adjust the shade as needed
+        borderColor="green.500"
+        color="black"
       />
 
       <FormLabel color="black">Campaign Description</FormLabel>
@@ -52,18 +78,18 @@ function CreateCampaign() {
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Campaign Description"
         mb={4}
-        // Added green color using borderColor
-        borderColor="green.500" // Adjust the shade as needed
+        borderColor="green.500"
+        color="black"
       />
 
-      <FormLabel color="black">Image URL</FormLabel>
+      <FormLabel color="black">Upload Image</FormLabel>
       <Input
-        value={imageUrl}
-        onChange={(e) => setImageUrl(e.target.value)}
-        placeholder="Image URL"
+        type="file"
+        accept="image/*"
+        onChange={(e) => setImageFile(e.target.files[0])}
         mb={4}
-        // Added green color using borderColor
-        borderColor="green.500" // Adjust the shade as needed
+        borderColor="green.500"
+        color="black"
       />
 
       <FormLabel color="black">Target Amount (ETH)</FormLabel>
@@ -72,13 +98,13 @@ function CreateCampaign() {
         onChange={(e) => setTargetAmount(e.target.value)}
         placeholder="Target Amount"
         mb={4}
-        // Added green color using borderColor
-        borderColor="green.500" // Adjust the shade as needed
+        borderColor="green.500"
+        color="black"
       />
 
       <Flex justifyContent="center">
-        <Button colorScheme="teal" onClick={handleSubmit} width="full">
-          Submit Campaign
+        <Button colorScheme="teal" onClick={handleSubmit} isDisabled={!isConnected}>
+          Create Campaign
         </Button>
       </Flex>
     </Box>
